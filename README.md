@@ -113,5 +113,7 @@ In case you don't want to use the script / `uv` tool you can set it up as follow
 - Requires Python 3.13+ (or adjust the `pyproject.toml` requirement to match your interpreter).
 - Run `colbert-server --help` or `colbert-server serve --help` to inspect available options.
 - The dataset helpers live under `colbert_server/data.py`; server configuration sits in `colbert_server/server.py`.
+- GitHub Actions runs lint/tests on every push; see `.github/workflows/ci.yml` for details.
+- Publishing uses the `.github/workflows/publish.yml` workflow. Before releasing, add `PYPI_API_TOKEN` (and optionally `TEST_PYPI_API_TOKEN`) to the repository secrets, bump the version in `pyproject.toml`, create a `vX.Y.Z` tag, and push it to trigger the publish job.
 
 Happy searching! 🧠📚
