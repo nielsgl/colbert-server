@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import argparse
+from importlib import metadata
 import json
 import os
-from importlib import metadata
 from pathlib import Path
 import sys
 import time
@@ -21,7 +21,6 @@ from .data import (
     extract_archives,
 )
 from .server import DEFAULT_CACHE_SIZE, DEFAULT_CHECKPOINT, create_app, create_searcher
-
 
 PACKAGE_NAME = "colbert-server"
 
@@ -303,7 +302,8 @@ def handle_serve(args: argparse.Namespace) -> int:
 
     if collection_path is None:
         print(
-            "Warning: collection path could not be inferred. ColBERT will run without document text.",
+            "Warning: collection path could not be inferred. "
+            "ColBERT will run without document text.",
             file=sys.stderr,
         )
 
