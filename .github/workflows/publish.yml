@@ -87,5 +87,4 @@ jobs:
         with:
           packages-dir: dist
           verify-metadata: true
-          password: ${{ secrets.PYPI_API_TOKEN }}
           verbose: true
