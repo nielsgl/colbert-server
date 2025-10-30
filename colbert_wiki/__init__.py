@@ -200,7 +200,7 @@ def handle_serve(args: argparse.Namespace) -> int:
 
     if collection_path is None:
         print(
-            "Warning: collection path could not be inferred. ColBERT will run without document text.",
+            "Warn: collection path could not be inferred. ColBERT will run without document text.",
             file=sys.stderr,
         )
 

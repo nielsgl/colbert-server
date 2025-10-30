@@ -1,4 +1,4 @@
-# colbert-wiki
+# ColBERT Wikipedia Server
 
 [![uv tool](https://img.shields.io/badge/uv-tool-3b82f6?logo=uv&logoColor=white)](https://docs.astral.sh/uv/)
 [![python 3.13+](https://img.shields.io/badge/python-3.13+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
@@ -7,6 +7,11 @@
 [![API Flask](https://img.shields.io/badge/api-flask-000000?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
 
 CLI tooling to fetch the ColBERT Wikipedia 2017 dataset and run a lightweight Flask API on top of the ColBERT v2 searcher.
+
+```text
+$> I wrote this because the ColBERT server is down and I couldn't try one of the tutorial from DSPy.
+$> I only tested this on my macbook, please open an issue if you have problems or feature requests.
+```
 
 ## Features
 
@@ -87,6 +92,15 @@ colbert-wiki download-archives ./downloads --extract
 
 Add `--extract-to /desired/path` to unpack into a different directory. You can later reuse
 the extracted paths with the `serve` command’s `--index-root` and `--collection-path` flags.
+
+## Alternative / Manual Method
+
+In case you don't want to use the script / `uv` tool you can set it up as follows:
+
+1. Add the dependencies to your project: `uv add colbert-ai flask faiss-cpu torch`
+2. Download the files (both the index and the collection) from the `archives` directory from the HuggingFace dataset and unzip them.
+3. Copy the `colbert_wiki/standalone.py` script and edit the `INDEX_ROOT` and `COLLECTION_PATH` variables.
+4. Run the server with `uv run standalone.py` and <tada.wav>
 
 ## Development tips
 

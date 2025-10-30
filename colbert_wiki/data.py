@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
+import shutil
 
 from huggingface_hub import snapshot_download
 
@@ -150,9 +150,7 @@ def locate_dataset_root(root: Path) -> Path:
         if (current / INDEXES_DIRNAME).exists():
             return current
 
-        index_like_dirs = [
-            child for child in current.iterdir() if _looks_like_index_dir(child)
-        ]
+        index_like_dirs = [child for child in current.iterdir() if _looks_like_index_dir(child)]
         if index_like_dirs:
             return current
 
@@ -190,9 +188,10 @@ def detect_dataset_paths(
     if not candidate_indexes:
         raise DatasetLayoutError(
             f"No index directories were found under {indexes_root}. "
-            "If you extracted the archives manually, ensure you pointed --index-root to the directory "
+            "If you extracted the archives manually, ensure you pointed --index-root to the dir "
             "containing the ColBERT index."
         )
+
     if preferred_index_name:
         target = indexes_root / preferred_index_name
         if not target.exists():
@@ -225,14 +224,14 @@ def infer_collection_path(dataset_root: Path) -> Path | None:
 
     if collection_dir.is_dir():
         tsv_files = [
-            path for path in collection_dir.rglob("*.tsv") if not _is_within_archives(path, dataset_root)
+            path
+            for path in collection_dir.rglob("*.tsv")
+            if not _is_within_archives(path, dataset_root)
         ]
         if len(tsv_files) == 1:
             return tsv_files[0]
         if len(tsv_files) > 1:
-            options = ", ".join(
-                _relative_str(path, dataset_root) for path in tsv_files[:10]
-            )
+            options = ", ".join(_relative_str(path, dataset_root) for path in tsv_files[:10])
             suffix = ", ..." if len(tsv_files) > 10 else ""
             raise DatasetLayoutError(
                 "Multiple TSV files found under "
@@ -252,6 +251,7 @@ def infer_collection_path(dataset_root: Path) -> Path | None:
     ]
     if len(candidates) == 1:
         return candidates[0]
+
     if len(candidates) > 1:
         options = ", ".join(_relative_str(path, dataset_root) for path in candidates[:10])
         suffix = ", ..." if len(candidates) > 10 else ""
@@ -261,16 +261,12 @@ def infer_collection_path(dataset_root: Path) -> Path | None:
         )
 
     fallback_candidates = [
-        path
-        for path in dataset_root.rglob("*.tsv")
-        if not _is_within_archives(path, dataset_root)
+        path for path in dataset_root.rglob("*.tsv") if not _is_within_archives(path, dataset_root)
     ]
     if len(fallback_candidates) == 1:
         return fallback_candidates[0]
     if len(fallback_candidates) > 1:
-        options = ", ".join(
-            _relative_str(path, dataset_root) for path in fallback_candidates[:10]
-        )
+        options = ", ".join(_relative_str(path, dataset_root) for path in fallback_candidates[:10])
         suffix = ", ..." if len(fallback_candidates) > 10 else ""
         raise DatasetLayoutError(
             "Multiple TSV files detected without a clear collection match. "
