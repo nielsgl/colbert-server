@@ -1,8 +1,11 @@
-# ColBERT Wikipedia Server
+# colbert-server
 
 [![uv tool](https://img.shields.io/badge/uv-tool-3b82f6?logo=uv&logoColor=white)](https://docs.astral.sh/uv/)
 [![python 3.13+](https://img.shields.io/badge/python-3.13+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![license MIT](https://img.shields.io/badge/license-MIT-7c3aed.svg)](LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/colbert-server.svg?color=3776AB&label=pypi)](https://pypi.org/project/colbert-server/)
+[![Downloads](https://img.shields.io/pypi/dm/colbert-server.svg?color=8b5cf6&label=downloads)](https://pypi.org/project/colbert-server/)
+[![CI](https://github.com/nielsgl/colbert-server/actions/workflows/ci.yml/badge.svg)](https://github.com/nielsgl/colbert-server/actions/workflows/ci.yml)
 [![dataset](https://img.shields.io/badge/dataset-huggingface-ff9a00?logo=huggingface&logoColor=white)](https://huggingface.co/datasets/nielsgl/colbert-wiki2017)
 [![API Flask](https://img.shields.io/badge/api-flask-000000?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
 
@@ -28,6 +31,12 @@ uv tool install colbert-server
 ```
 
 This registers a `colbert-server` executable in your `uv` toolchain.
+
+Check the installed version at any time:
+
+```bash
+colbert-server --version
+```
 
 Or if you just want to run it:
 
@@ -114,6 +123,7 @@ In case you don't want to use the script / `uv` tool you can set it up as follow
 - Run `colbert-server --help` or `colbert-server serve --help` to inspect available options.
 - The dataset helpers live under `colbert_server/data.py`; server configuration sits in `colbert_server/server.py`.
 - GitHub Actions runs lint/tests on every push; see `.github/workflows/ci.yml` for details.
-- Publishing uses the `.github/workflows/publish.yml` workflow. Before releasing, add `PYPI_API_TOKEN` (and optionally `TEST_PYPI_API_TOKEN`) to the repository secrets, bump the version in `pyproject.toml`, create a `vX.Y.Z` tag, and push it to trigger the publish job.
+- Publishing uses the `.github/workflows/publish.yml` workflow. Once your PyPI/TestPyPI trusted publishers are set up, bump the version in `pyproject.toml`, create a `vX.Y.Z` tag, and push it to trigger the release.
+- The CLI pings PyPI at most once per day and nudges you if a newer version exists. Set `COLBERT_SERVER_DISABLE_UPDATE_CHECK=1` to disable this behaviour.
 
 Happy searching! 🧠📚
