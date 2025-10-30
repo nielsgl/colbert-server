@@ -24,17 +24,23 @@ $> I only tested this on my macbook, please open an issue if you have problems o
 ## Installation
 
 ```bash
-uv tool install .
+uv tool install colbert-server
 ```
 
-This registers a `colbert-wiki` executable in your `uv` toolchain.
+This registers a `colbert-server` executable in your `uv` toolchain.
+
+Or if you just want to run it:
+
+```bash
+uvx run colbert-server --help
+```
 
 ## Running the server
 
 ### Use data from the Hugging Face cache (recommended quick start)
 
 ```bash
-colbert-wiki serve --from-cache
+colbert-server serve --from-cache
 ```
 
 This downloads only the `collection/` and `indexes/` folders from
@@ -44,7 +50,7 @@ resolves the on-disk paths from the Hugging Face cache, and starts the server.
 ### Provide existing local assets
 
 ```bash
-colbert-wiki serve \
+colbert-server serve \
   --index-root /path/to/indexes \
   --index-name wiki17.nbits.local \
   --collection-path /path/to/collection/wiki.abstracts.2017/collection.tsv
@@ -55,7 +61,7 @@ Use this mode when you already have ColBERT indexes and a collection TSV locally
 ### Download archives first, then serve
 
 ```bash
-colbert-wiki serve \
+colbert-server serve \
   --download-archives /tmp/wiki-assets \
   --extract \
   --port 8894
@@ -87,7 +93,7 @@ The JSON response includes the ranked passages, their scores, and normalized pro
 If you just want the raw archive bundles in a local directory:
 
 ```bash
-colbert-wiki download-archives ./downloads --extract
+colbert-server download-archives ./downloads --extract
 ```
 
 Add `--extract-to /desired/path` to unpack into a different directory. You can later reuse
@@ -99,13 +105,13 @@ In case you don't want to use the script / `uv` tool you can set it up as follow
 
 1. Add the dependencies to your project: `uv add colbert-ai flask faiss-cpu torch`
 2. Download the files (both the index and the collection) from the `archives` directory from the HuggingFace dataset and unzip them.
-3. Copy the `colbert_wiki/standalone.py` script and edit the `INDEX_ROOT` and `COLLECTION_PATH` variables.
+3. Copy the `colbert_server/standalone.py` script and edit the `INDEX_ROOT` and `COLLECTION_PATH` variables.
 4. Run the server with `uv run standalone.py` and <tada.wav>
 
 ## Development tips
 
 - Requires Python 3.13+ (or adjust the `pyproject.toml` requirement to match your interpreter).
-- Run `colbert-wiki --help` or `colbert-wiki serve --help` to inspect available options.
-- The dataset helpers live under `colbert_wiki/data.py`; server configuration sits in `colbert_wiki/server.py`.
+- Run `colbert-server --help` or `colbert-server serve --help` to inspect available options.
+- The dataset helpers live under `colbert_server/data.py`; server configuration sits in `colbert_server/server.py`.
 
 Happy searching! 🧠📚
