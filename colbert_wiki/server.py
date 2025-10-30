@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import math
 from functools import lru_cache
+import math
 from typing import Optional
 
 from colbert import Searcher
@@ -14,7 +14,7 @@ DEFAULT_CACHE_SIZE = 1_000_000
 def create_searcher(
     index_root: str,
     index_name: str,
-    collection_path: Optional[str],
+    collection_path: str | None,
     checkpoint: str = DEFAULT_CHECKPOINT,
 ) -> Searcher:
     """Instantiate a ColBERT Searcher with the given configuration."""
@@ -32,7 +32,7 @@ def create_app(searcher: Searcher, cache_size: int = DEFAULT_CACHE_SIZE) -> Flas
     counter = {"api": 0}
 
     @lru_cache(maxsize=cache_size)
-    def api_search_query(query: str, k: Optional[int]):
+    def api_search_query(query: str, k: int | None):
         print(f"Query={query}")
         if query is None:
             return {"query": "", "topk": []}
@@ -51,9 +51,7 @@ def create_app(searcher: Searcher, cache_size: int = DEFAULT_CACHE_SIZE) -> Flas
         topk = []
         for pid, rank, score, prob in zip(pids, ranks, scores, probs):
             text = searcher.collection[pid] if searcher.collection is not None else None
-            topk.append(
-                {"text": text, "pid": pid, "rank": rank, "score": score, "prob": prob}
-            )
+            topk.append({"text": text, "pid": pid, "rank": rank, "score": score, "prob": prob})
 
         topk.sort(key=lambda item: (-item["score"], item["pid"]))
         return {"query": query, "topk": topk}

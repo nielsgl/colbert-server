@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import argparse
 import os
-import sys
 from pathlib import Path
+import sys
 from typing import Optional
 
 from .data import (
@@ -133,7 +133,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
@@ -161,7 +161,9 @@ def handle_serve(args: argparse.Namespace) -> int:
         index_root, index_name, inferred_collection = detect_dataset_paths(
             snapshot_path, preferred_index_name=args.index_name
         )
-        collection_path = Path(args.collection_path) if args.collection_path else inferred_collection
+        collection_path = (
+            Path(args.collection_path) if args.collection_path else inferred_collection
+        )
         print(f"Downloaded dataset snapshot to {snapshot_path}")
     elif args.download_archives:
         snapshot_path = download_archives(
@@ -185,7 +187,9 @@ def handle_serve(args: argparse.Namespace) -> int:
         index_root, index_name, inferred_collection = detect_dataset_paths(
             extracted_root, preferred_index_name=args.index_name
         )
-        collection_path = Path(args.collection_path) if args.collection_path else inferred_collection
+        collection_path = (
+            Path(args.collection_path) if args.collection_path else inferred_collection
+        )
     else:
         if not args.index_root or not args.index_name:
             raise DatasetLayoutError(

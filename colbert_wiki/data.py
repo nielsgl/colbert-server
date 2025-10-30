@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
+import shutil
 from typing import Optional, Tuple
 
 from huggingface_hub import snapshot_download
@@ -13,9 +13,7 @@ INDEXES_DIRNAME = "indexes"
 SUPPORTED_ARCHIVE_SUFFIXES = {
     suffix for _, suffixes, _ in shutil.get_unpack_formats() for suffix in suffixes
 }
-SUPPORTED_ARCHIVE_SUFFIXES_LOWER = tuple(
-    suffix.lower() for suffix in SUPPORTED_ARCHIVE_SUFFIXES
-)
+SUPPORTED_ARCHIVE_SUFFIXES_LOWER = tuple(suffix.lower() for suffix in SUPPORTED_ARCHIVE_SUFFIXES)
 
 
 class DatasetLayoutError(RuntimeError):
@@ -26,8 +24,8 @@ def download_archives(
     destination: Path,
     *,
     repo_id: str = DATASET_REPO_ID,
-    revision: Optional[str] = None,
-    token: Optional[str] = None,
+    revision: str | None = None,
+    token: str | None = None,
 ) -> Path:
     """
     Download the compressed archives from the Hugging Face dataset into ``destination``.
@@ -53,9 +51,9 @@ def download_archives(
 def download_collection_and_indexes(
     *,
     repo_id: str = DATASET_REPO_ID,
-    revision: Optional[str] = None,
-    token: Optional[str] = None,
-    cache_dir: Optional[Path] = None,
+    revision: str | None = None,
+    token: str | None = None,
+    cache_dir: Path | None = None,
 ) -> Path:
     """
     Download the ``collection`` and ``indexes`` folders into the Hugging Face cache.
@@ -105,9 +103,7 @@ def extract_archives(snapshot_path: Path, extract_to: Path) -> Path:
             shutil.unpack_archive(str(archive), str(extract_to))
             extracted_any = True
         except (shutil.ReadError, ValueError) as err:
-            raise DatasetLayoutError(
-                f"Failed to extract archive {archive.name}: {err}"
-            ) from err
+            raise DatasetLayoutError(f"Failed to extract archive {archive.name}: {err}") from err
 
     if not extracted_any:
         raise DatasetLayoutError(
@@ -147,8 +143,8 @@ def locate_dataset_root(root: Path) -> Path:
 
 
 def detect_dataset_paths(
-    base_path: Path, *, preferred_index_name: Optional[str] = None
-) -> Tuple[Path, str, Optional[Path]]:
+    base_path: Path, *, preferred_index_name: str | None = None
+) -> tuple[Path, str, Path | None]:
     """
     Inspect ``base_path`` to determine the index root, index name, and collection path.
 
@@ -173,9 +169,7 @@ def detect_dataset_paths(
         index_name = preferred_index_name
     else:
         if not candidate_indexes:
-            raise DatasetLayoutError(
-                f"No index directories were found under {indexes_root}."
-            )
+            raise DatasetLayoutError(f"No index directories were found under {indexes_root}.")
         if len(candidate_indexes) > 1:
             options = ", ".join(sorted(p.name for p in candidate_indexes))
             raise DatasetLayoutError(
@@ -188,7 +182,7 @@ def detect_dataset_paths(
     return indexes_root, index_name, collection_path
 
 
-def infer_collection_path(dataset_root: Path) -> Optional[Path]:
+def infer_collection_path(dataset_root: Path) -> Path | None:
     """Attempt to infer the collection file path from the dataset root."""
     dataset_root = Path(dataset_root)
 
