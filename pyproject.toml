@@ -1,5 +1,5 @@
 [project]
-name = "colbert-wiki"
+name = "colbert-server"
 version = "0.1.0"
 description = "Run ColBERT Wikipedia server"
 readme = "README.md"
@@ -25,14 +25,14 @@ dev = [
 
 
 [project.scripts]
-colbert-wiki = "colbert_wiki:main"
+colbert-server = "colbert_server:main"
 
 [build-system]
 requires = ["uv_build>=0.9.5,<0.10.0"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
-module-name = "colbert_wiki"
+module-name = "colbert_server"
 module-root = ""
 
 [tool.black]
