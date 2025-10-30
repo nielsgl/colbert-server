@@ -79,6 +79,7 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
           packages-dir: dist
           verify-metadata: true
+          verbose: true
 
       - name: Publish to PyPI
         if: needs.determine-target.outputs.repository == 'pypi'
@@ -87,3 +88,4 @@ jobs:
           packages-dir: dist
           verify-metadata: true
           password: ${{ secrets.PYPI_API_TOKEN }}
+          verbose: true
