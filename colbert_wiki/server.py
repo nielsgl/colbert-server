@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from functools import lru_cache
 import math
-from typing import Optional
 
 from colbert import Searcher
 from flask import Flask, request

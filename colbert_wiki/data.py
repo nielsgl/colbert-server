@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from pathlib import Path
 import shutil
-from typing import Optional, Tuple
+from pathlib import Path
 
 from huggingface_hub import snapshot_download
 

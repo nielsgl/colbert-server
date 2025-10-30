@@ -4,7 +4,6 @@ import argparse
 import os
 from pathlib import Path
 import sys
-from typing import Optional
 
 from .data import (
     DATASET_REPO_ID,
