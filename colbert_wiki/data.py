@@ -19,6 +19,29 @@ class DatasetLayoutError(RuntimeError):
     """Raised when the downloaded dataset structure is not as expected."""
 
 
+def _looks_like_index_dir(path: Path) -> bool:
+    if not path.is_dir():
+        return False
+    if path.name == ARCHIVES_DIRNAME:
+        return False
+    return any(child.name.endswith(".codes.pt") for child in path.iterdir())
+
+
+def _relative_str(path: Path, base: Path) -> str:
+    try:
+        return str(path.relative_to(base))
+    except ValueError:
+        return str(path)
+
+
+def _is_within_archives(path: Path, dataset_root: Path) -> bool:
+    try:
+        relative = path.relative_to(dataset_root)
+    except ValueError:
+        return False
+    return ARCHIVES_DIRNAME in relative.parts
+
+
 def download_archives(
     destination: Path,
     *,
@@ -41,8 +64,6 @@ def download_archives(
         token=token,
         allow_patterns=[f"{ARCHIVES_DIRNAME}/*"],
         local_dir=str(destination),
-        local_dir_use_symlinks=False,
-        resume_download=True,
     )
     return Path(snapshot_path)
 
@@ -67,8 +88,6 @@ def download_collection_and_indexes(
         cache_dir=str(cache_dir) if cache_dir else None,
         allow_patterns=[f"{COLLECTION_DIRNAME}/*", f"{INDEXES_DIRNAME}/*"],
         ignore_patterns=[f"{ARCHIVES_DIRNAME}/*"],
-        local_dir_use_symlinks=False,
-        resume_download=True,
     )
     return Path(snapshot_path)
 
@@ -131,12 +150,18 @@ def locate_dataset_root(root: Path) -> Path:
         if (current / INDEXES_DIRNAME).exists():
             return current
 
+        index_like_dirs = [
+            child for child in current.iterdir() if _looks_like_index_dir(child)
+        ]
+        if index_like_dirs:
+            return current
+
         for child in sorted(current.iterdir()):
-            if child.is_dir():
+            if child.is_dir() and child.name != ARCHIVES_DIRNAME:
                 queue.append(child)
 
     raise DatasetLayoutError(
-        f"Could not find an '{INDEXES_DIRNAME}' folder beneath {root}. "
+        f"Could not locate a ColBERT index beneath {root}. "
         "Please verify your download or supply the paths explicitly."
     )
 
@@ -151,14 +176,23 @@ def detect_dataset_paths(
     may be ``None`` if it could not be inferred automatically.
     """
     dataset_root = locate_dataset_root(base_path)
-    indexes_root = dataset_root / INDEXES_DIRNAME
-    if not indexes_root.exists():
-        raise DatasetLayoutError(
-            f"The resolved dataset root {dataset_root} does not contain "
-            f"an '{INDEXES_DIRNAME}' directory."
-        )
+    indexes_dir = dataset_root / INDEXES_DIRNAME
 
-    candidate_indexes = [p for p in indexes_root.iterdir() if p.is_dir()]
+    if indexes_dir.exists():
+        indexes_root = indexes_dir
+        candidate_indexes = [p for p in indexes_root.iterdir() if p.is_dir()]
+    else:
+        indexes_root = dataset_root
+        candidate_indexes = [p for p in indexes_root.iterdir() if _looks_like_index_dir(p)]
+
+    candidate_indexes = [p for p in candidate_indexes if p.name != ARCHIVES_DIRNAME]
+
+    if not candidate_indexes:
+        raise DatasetLayoutError(
+            f"No index directories were found under {indexes_root}. "
+            "If you extracted the archives manually, ensure you pointed --index-root to the directory "
+            "containing the ColBERT index."
+        )
     if preferred_index_name:
         target = indexes_root / preferred_index_name
         if not target.exists():
@@ -190,11 +224,15 @@ def infer_collection_path(dataset_root: Path) -> Path | None:
         return collection_dir
 
     if collection_dir.is_dir():
-        tsv_files = sorted(collection_dir.rglob("*.tsv"))
+        tsv_files = [
+            path for path in collection_dir.rglob("*.tsv") if not _is_within_archives(path, dataset_root)
+        ]
         if len(tsv_files) == 1:
             return tsv_files[0]
         if len(tsv_files) > 1:
-            options = ", ".join(str(path.relative_to(collection_dir)) for path in tsv_files[:10])
+            options = ", ".join(
+                _relative_str(path, dataset_root) for path in tsv_files[:10]
+            )
             suffix = ", ..." if len(tsv_files) > 10 else ""
             raise DatasetLayoutError(
                 "Multiple TSV files found under "
@@ -206,9 +244,38 @@ def infer_collection_path(dataset_root: Path) -> Path | None:
             "Supply --collection-path pointing to the desired collection file."
         )
 
-    # Fallback: look for a collection file at the root
-    tsv_candidates = sorted(dataset_root.glob("collection*.tsv"))
-    if len(tsv_candidates) == 1:
-        return tsv_candidates[0]
+    # Fallback: search for likely collection files anywhere under the root.
+    candidates = [
+        path
+        for path in dataset_root.rglob("collection*.tsv")
+        if not _is_within_archives(path, dataset_root)
+    ]
+    if len(candidates) == 1:
+        return candidates[0]
+    if len(candidates) > 1:
+        options = ", ".join(_relative_str(path, dataset_root) for path in candidates[:10])
+        suffix = ", ..." if len(candidates) > 10 else ""
+        raise DatasetLayoutError(
+            "Multiple collection TSV files detected. Please provide --collection-path explicitly. "
+            f"Examples: {options}{suffix}"
+        )
+
+    fallback_candidates = [
+        path
+        for path in dataset_root.rglob("*.tsv")
+        if not _is_within_archives(path, dataset_root)
+    ]
+    if len(fallback_candidates) == 1:
+        return fallback_candidates[0]
+    if len(fallback_candidates) > 1:
+        options = ", ".join(
+            _relative_str(path, dataset_root) for path in fallback_candidates[:10]
+        )
+        suffix = ", ..." if len(fallback_candidates) > 10 else ""
+        raise DatasetLayoutError(
+            "Multiple TSV files detected without a clear collection match. "
+            "Please provide --collection-path explicitly. "
+            f"Examples: {options}{suffix}"
+        )
 
     return None
