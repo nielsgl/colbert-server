@@ -1,9 +1,16 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
+from importlib import metadata
 from pathlib import Path
 import sys
+import time
+import urllib.error
+import urllib.request
+
+from packaging.version import InvalidVersion, Version
 
 from .data import (
     DATASET_REPO_ID,
@@ -16,10 +23,104 @@ from .data import (
 from .server import DEFAULT_CACHE_SIZE, DEFAULT_CHECKPOINT, create_app, create_searcher
 
 
+PACKAGE_NAME = "colbert-server"
+
+
+def _resolve_version() -> str:
+    try:
+        return metadata.version(PACKAGE_NAME)
+    except metadata.PackageNotFoundError:
+        return "0.0.0"
+
+
+VERSION = _resolve_version()
+CACHE_TTL_SECONDS = 24 * 60 * 60
+
+
+def _cache_path() -> Path:
+    base = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
+    return base / "colbert-server" / "update.json"
+
+
+def _read_cached_latest() -> tuple[str | None, float | None]:
+    try:
+        data = json.loads(_cache_path().read_text())
+        latest = data.get("latest")
+        checked_at = float(data.get("checked_at", 0))
+        return latest, checked_at
+    except (OSError, ValueError, TypeError):
+        return None, None
+
+
+def _write_cache(latest: str) -> None:
+    cache_file = _cache_path()
+    try:
+        cache_file.parent.mkdir(parents=True, exist_ok=True)
+        cache_file.write_text(json.dumps({"latest": latest, "checked_at": time.time()}))
+    except OSError:
+        pass
+
+
+def _fetch_latest_version(timeout: float = 2.0) -> str | None:
+    request = urllib.request.Request(
+        f"https://pypi.org/pypi/{PACKAGE_NAME}/json",
+        headers={"User-Agent": f"{PACKAGE_NAME}/{VERSION}"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            payload = json.load(response)
+        latest = payload.get("info", {}).get("version")
+        if isinstance(latest, str) and latest:
+            _write_cache(latest)
+            return latest
+    except (urllib.error.URLError, ValueError, OSError):
+        return None
+    return None
+
+
+def maybe_warn_on_update() -> None:
+    if os.environ.get("COLBERT_SERVER_DISABLE_UPDATE_CHECK") == "1":
+        return
+
+    cached_version, checked_at = _read_cached_latest()
+    now = time.time()
+    if cached_version and checked_at and now - checked_at < CACHE_TTL_SECONDS:
+        latest_version = cached_version
+    else:
+        latest_version = _fetch_latest_version()
+        if latest_version is None:
+            latest_version = cached_version
+
+    if not latest_version:
+        return
+
+    try:
+        current_version = Version(VERSION)
+        remote_version = Version(latest_version)
+    except InvalidVersion:
+        return
+
+    if remote_version > current_version:
+        print(
+            (
+                f"A newer version of {PACKAGE_NAME} is available "
+                f"({remote_version} > {current_version}). "
+                "Update with `uv tool upgrade colbert-server`."
+            ),
+            file=sys.stderr,
+        )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="colbert-server",
         description="Run the ColBERT Wikipedia search server or manage its dataset assets.",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {VERSION}",
+        help="Show the installed version and exit.",
     )
     subparsers = parser.add_subparsers(dest="command")
 
@@ -140,6 +241,8 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_help()
         return 0
 
+    maybe_warn_on_update()
+
     try:
         return args.func(args)
     except DatasetLayoutError as err:
@@ -200,7 +303,7 @@ def handle_serve(args: argparse.Namespace) -> int:
 
     if collection_path is None:
         print(
-            "Warn: collection path could not be inferred. ColBERT will run without document text.",
+            "Warning: collection path could not be inferred. ColBERT will run without document text.",
             file=sys.stderr,
         )
 
