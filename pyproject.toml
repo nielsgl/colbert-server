@@ -6,6 +6,18 @@ readme = "README.md"
 authors = [
     { name = "Niels van Galen Last", email = "nvangalenlast@gmail.com" }
 ]
+license = "MIT"
+keywords = ["colbert", "retrieval", "search", "wikipedia", "ir"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Information Retrieval",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+]
 requires-python = ">=3.13"
 dependencies = [
     "colbert-ai>=0.2.22",
@@ -26,6 +38,12 @@ dev = [
 
 [project.scripts]
 colbert-server = "colbert_server:main"
+
+[project.urls]
+Homepage = "https://github.com/nielsgl/colbert-server"
+Repository = "https://github.com/nielsgl/colbert-server"
+Issues = "https://github.com/nielsgl/colbert-server/issues"
+Dataset = "https://huggingface.co/datasets/nielsgl/colbert-wiki2017"
 
 [build-system]
 requires = ["uv_build>=0.9.5,<0.10.0"]
