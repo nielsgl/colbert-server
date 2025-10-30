@@ -1,0 +1,32 @@
+{
+    "[python]": {
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit"
+        },
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true
+    },
+    "black-formatter.importStrategy": "fromEnvironment",
+    "conventionalCommits.scopes": [
+        "docs",
+        "config",
+        "core"
+    ],
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
+    "jupyter.askForKernelRestart": false,
+    "python.analysis.extraPaths": [
+        "colbert_wiki"
+    ],
+    "python.analysis.typeCheckingMode": "standard",
+    "python.autoComplete.extraPaths": [
+        "colbert_wiki"
+    ],
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "python.languageServer": "Pylance",
+    "ruff.configuration": "pyproject.toml",
+    "ruff.enable": true,
+    "ruff.lineLength": 100,
+    "ruff.organizeImports": false
+}

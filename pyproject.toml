@@ -1,0 +1,49 @@
+[project]
+name = "colbert-wiki"
+version = "0.1.0"
+description = "Run ColBERT Wikipedia server"
+readme = "README.md"
+authors = [
+    { name = "Niels van Galen Last", email = "nvangalenlast@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "colbert-ai>=0.2.22",
+    "faiss-cpu>=1.12.0",
+    "flask>=3.1.2",
+    "huggingface-hub>=0.36.0",
+    "torch>=2.9.0",
+]
+
+[dependency-groups]
+dev = [
+    "black>=25.9.0",
+    "isort>=7.0.0",
+    "pre-commit>=4.3.0",
+    "ruff>=0.14.2",
+]
+
+
+[project.scripts]
+colbert-wiki = "colbert_wiki:main"
+
+[build-system]
+requires = ["uv_build>=0.9.5,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "colbert_wiki"
+module-root = ""
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["W505"]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
