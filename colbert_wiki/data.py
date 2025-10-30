@@ -190,16 +190,21 @@ def infer_collection_path(dataset_root: Path) -> Path | None:
         return collection_dir
 
     if collection_dir.is_dir():
-        tsv_files = sorted(collection_dir.glob("*.tsv"))
+        tsv_files = sorted(collection_dir.rglob("*.tsv"))
         if len(tsv_files) == 1:
             return tsv_files[0]
         if len(tsv_files) > 1:
+            options = ", ".join(str(path.relative_to(collection_dir)) for path in tsv_files[:10])
+            suffix = ", ..." if len(tsv_files) > 10 else ""
             raise DatasetLayoutError(
-                f"Multiple TSV files found in {collection_dir}; please specify "
-                "the collection path explicitly."
+                "Multiple TSV files found under "
+                f"{collection_dir}. Please specify --collection-path explicitly. "
+                f"Examples: {options}{suffix}"
             )
-        # Fall back to the directory itself if formats differ
-        return collection_dir
+        raise DatasetLayoutError(
+            f"No TSV file found under {collection_dir}. "
+            "Supply --collection-path pointing to the desired collection file."
+        )
 
     # Fallback: look for a collection file at the root
     tsv_candidates = sorted(dataset_root.glob("collection*.tsv"))
