@@ -105,7 +105,7 @@ In case you don't want to use the script / `uv` tool you can set it up as follow
 
 1. Add the dependencies to your project: `uv add colbert-ai flask faiss-cpu torch`
 2. Download the files (both the index and the collection) from the `archives` directory from the HuggingFace dataset and unzip them.
-3. Copy the `colbert_server/standalone.py` script and edit the `INDEX_ROOT` and `COLLECTION_PATH` variables.
+3. Copy the `standalone.py` script from this repository and edit the `INDEX_ROOT` and `COLLECTION_PATH` variables.
 4. Run the server with `uv run standalone.py` and <tada.wav>
 
 ## Development tips
