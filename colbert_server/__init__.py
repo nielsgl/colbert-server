@@ -18,7 +18,7 @@ from .server import DEFAULT_CACHE_SIZE, DEFAULT_CHECKPOINT, create_app, create_s
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="colbert-wiki",
+        prog="colbert-server",
         description="Run the ColBERT Wikipedia search server or manage its dataset assets.",
     )
     subparsers = parser.add_subparsers(dest="command")
