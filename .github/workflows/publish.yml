@@ -34,15 +34,16 @@ jobs:
     needs: determine-target
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Set up uv and Python
-        uses: astral-sh/setup-uv@v1
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v6
         with:
+          version: "0.9.5"
           python-version: "3.13"
 
       - name: Build distributions
-        run: uv build
+        run: uv build --no-sources
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
