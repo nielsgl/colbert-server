@@ -2,9 +2,12 @@ from __future__ import annotations
 
 from functools import lru_cache
 import math
+from typing import TYPE_CHECKING
 
-from colbert import Searcher
 from flask import Flask, request
+
+if TYPE_CHECKING:  # pragma: no cover - imported lazily at runtime
+    from colbert import Searcher
 
 DEFAULT_CHECKPOINT = "colbert-ir/colbertv2.0"
 DEFAULT_CACHE_SIZE = 1_000_000
@@ -17,6 +20,8 @@ def create_searcher(
     checkpoint: str = DEFAULT_CHECKPOINT,
 ) -> Searcher:
     """Instantiate a ColBERT Searcher with the given configuration."""
+    from colbert import Searcher  # Import lazily to avoid eager torch/faiss loading
+
     return Searcher(
         index=index_name,
         checkpoint=checkpoint,
