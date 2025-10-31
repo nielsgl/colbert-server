@@ -44,7 +44,7 @@ jobs:
 
       - name: Bump version
         run: |
-          uv version ${{ github.event.inputs.bump }}
+          uv version --bump ${{ github.event.inputs.bump }}
           uv lock
 
       - name: Capture version
