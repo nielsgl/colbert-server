@@ -23,6 +23,7 @@ $> I only tested this on my macbook, please open an issue if you have problems o
 - Optional archive extraction flow for offline usage.
 - Caches ColBERT queries for fast, repeated lookups.
 - Exposes a simple `/api/search` endpoint for programmatic access.
+- Ships with a `doctor` command that validates Torch/FAISS installs before the 13 GB download.
 
 ## Installation
 
@@ -36,6 +37,12 @@ Check the installed version at any time:
 
 ```bash
 colbert-server --version
+```
+
+Run the built-in diagnostic command to verify torch/faiss before downloading the index:
+
+```bash
+colbert-server doctor
 ```
 
 Or if you just want to run it:
@@ -112,7 +119,9 @@ the extracted paths with the `serve` command’s `--index-root` and `--collectio
 
 In case you don't want to use the script / `uv` tool you can set it up as follows:
 
-1. Add the dependencies to your project: `uv add colbert-ai flask faiss-cpu torch`
+1. Add the dependencies to your project: `uv add colbert-ai flask faiss-cpu` and
+   `uv add torch --index pytorch-cpu` (the repo already provides the PyTorch CPU
+   index in `pyproject.toml`).
 2. Download the files (both the index and the collection) from the `archives` directory from the HuggingFace dataset and unzip them.
 3. Copy the `standalone.py` script from this repository and edit the `INDEX_ROOT` and `COLLECTION_PATH` variables.
 4. Run the server with `uv run standalone.py` and <tada.wav>
@@ -122,7 +131,7 @@ In case you don't want to use the script / `uv` tool you can set it up as follow
 - Requires Python 3.13+ (or adjust the `pyproject.toml` requirement to match your interpreter).
 - Run `colbert-server --help` or `colbert-server serve --help` to inspect available options.
 - The dataset helpers live under `colbert_server/data.py`; server configuration sits in `colbert_server/server.py`.
-- GitHub Actions runs lint/tests on every push; see `.github/workflows/ci.yml` for details.
+- GitHub Actions runs lint/tests on every push across Ubuntu, macOS, and Windows; see `.github/workflows/ci.yml` for details.
 - Publishing uses the `.github/workflows/publish.yml` workflow. Once your PyPI/TestPyPI trusted publishers are set up, bump the version in `pyproject.toml`, create a `vX.Y.Z` tag, and push it to trigger the release.
 - The CLI pings PyPI at most once per day and nudges you if a newer version exists. Set `COLBERT_SERVER_DISABLE_UPDATE_CHECK=1` to disable this behaviour.
 
