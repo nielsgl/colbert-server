@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib
 from importlib import metadata
 import json
 import os
@@ -229,6 +230,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     archives_parser.set_defaults(func=handle_download_archives)
 
+    doctor_parser = subparsers.add_parser(
+        "doctor",
+        help="Inspect environment and dataset prerequisites without downloading large assets.",
+    )
+    doctor_parser.set_defaults(func=handle_doctor)
+
     return parser
 
 
@@ -339,4 +346,82 @@ def handle_download_archives(args: argparse.Namespace) -> int:
         extracted_root = extract_archives(snapshot_path, extraction_dir)
         print(f"Archives extracted to {extracted_root}")
 
+    return 0
+
+
+def _check_package(name: str, friendly: str | None = None) -> tuple[bool, str]:
+    label = friendly or name
+    try:
+        importlib.import_module(name)
+        return True, f"{label}: OK"
+    except ModuleNotFoundError as exc:
+        return False, f"{label}: missing ({exc})"
+    except Exception as exc:  # pragma: no cover - defensive
+        return False, f"{label}: error ({exc})"
+
+
+def _check_torch_cpu() -> tuple[bool, str]:
+    try:
+        torch = importlib.import_module("torch")
+    except ModuleNotFoundError as exc:
+        return (
+            False,
+            f"torch import failed ({exc}). Install via `uv pip install torch --index-url https://download.pytorch.org/whl/cpu`",
+        )
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    return True, f"torch {torch.__version__} detected ({device})"
+
+
+def _check_faiss() -> tuple[bool, str]:
+    libs = ["faiss", "faiss_cpu"]
+    messages = []
+    for lib in libs:
+        ok, msg = _check_package(lib)
+        if ok:
+            return True, msg
+        messages.append(msg)
+    return False, "; ".join(messages)
+
+
+def _describe_cache() -> str:
+    cache_dir = (
+        Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "huggingface" / "hub"
+    )
+    if cache_dir.exists():
+        try:
+            size = sum(p.stat().st_size for p in cache_dir.rglob("*"))
+            size_mb = size / (1024 * 1024)
+            return f"Hugging Face cache: {cache_dir} (~{size_mb:.1f} MB)"
+        except OSError:
+            return f"Hugging Face cache: {cache_dir} (size unknown)"
+    return f"Hugging Face cache: {cache_dir} (directory missing, will be created)"
+
+
+def handle_doctor(args: argparse.Namespace) -> int:  # noqa: ARG001
+    print(f"colbert-server {VERSION}")
+    print(_describe_cache())
+
+    checks = [
+        _check_torch_cpu(),
+        _check_faiss(),
+        _check_package("huggingface_hub", "huggingface-hub"),
+        _check_package("flask", "flask"),
+    ]
+
+    errors = False
+    for ok, message in checks:
+        status = "OK" if ok else "WARN"
+        print(f"[{status}] {message}")
+        if not ok:
+            errors = True
+
+    if errors:
+        print("Some checks failed. Review warnings above before running `serve`.")
+        return 1
+
+    print(
+        "Environment looks ready. Run `colbert-server serve --from-cache` "
+        "to download indices (~13 GB)."
+    )
     return 0
