@@ -1,0 +1,71 @@
+---
+# yamllint disable rule:truthy
+name: Release
+
+on:
+  workflow_dispatch:  # yamllint disable-line truthy
+    inputs:
+      bump:
+        description: "Version bump"
+        type: "choice"
+        required: true
+        default: "patch"
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      COLBERT_SERVER_DISABLE_UPDATE_CHECK: "1"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.RELEASE_TOKEN }}
+          fetch-depth: 0
+
+      - name: Configure git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version
+        run: |
+          uv version ${{ github.event.inputs.bump }}
+          uv lock
+
+      - name: Capture version
+        run: |
+          VERSION=$(uv version --short --output-format text)
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Run tests
+        run: |
+          uv run --python 3.13 pytest
+
+      - name: Build distributions
+        run: uv build --no-sources
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
+          verify-metadata: true
+          verbose: true
+
+      - name: Commit version bump
+        run: |
+          git add pyproject.toml uv.lock
+          git commit -m ":bookmark: chore(release): v$VERSION"
+
+      - name: Push changes and tag
+        run: |
+          git push origin HEAD:main
+          git tag v$VERSION
+          git push origin v$VERSION

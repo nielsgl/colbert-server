@@ -30,4 +30,4 @@ repos:
 #         - id: markdownlint-fix
 
 default_language_version:
-  python: python3.13
+  python: python3.12

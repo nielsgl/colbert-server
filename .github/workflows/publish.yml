@@ -1,9 +1,6 @@
-name: Publish
+name: Manual Publish
 
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
     inputs:
       repository:
