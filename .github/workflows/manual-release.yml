@@ -1,6 +1,6 @@
 ---
 # yamllint disable rule:truthy
-name: Release
+name: Manual Release
 
 on:
   workflow_dispatch:  # yamllint disable-line truthy
@@ -56,15 +56,8 @@ jobs:
         run: |
           uv run --python 3.13 pytest
 
-      - name: Build distributions
+      - name: Validate build
         run: uv build --no-sources
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: dist
-          verify-metadata: true
-          verbose: true
 
       - name: Commit version bump
         run: |

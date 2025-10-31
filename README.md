@@ -132,8 +132,8 @@ In case you don't want to use the script / `uv` tool you can set it up as follow
 - Run `colbert-server --help` or `colbert-server serve --help` to inspect available options.
 - The dataset helpers live under `colbert_server/data.py`; server configuration sits in `colbert_server/server.py`.
 - GitHub Actions runs lint/tests on every push across Ubuntu, macOS, and Windows; see `.github/workflows/ci.yml` for details.
-- Publishing is handled via the `Release` workflow. Trigger it from the Actions tab, choose the desired bump (patch/minor/major), and it will bump the version, run tests, publish to PyPI via trusted publishing, push the commit, and tag the release. Create a `RELEASE_TOKEN` secret with `repo` scope so the workflow can push back to `main`.
+- Publishing is handled via the `Manual Release` workflow. Trigger it from the Actions tab, choose the desired bump (patch/minor/major), and it will bump the version, run tests/builds, push the commit, and create the `vX.Y.Z` tag. Create a `RELEASE_TOKEN` secret with `repo` scope so the workflow can push back to `main`.
 - The CLI pings PyPI at most once per day and nudges you if a newer version exists. Set `COLBERT_SERVER_DISABLE_UPDATE_CHECK=1` to disable this behaviour.
-- After a successful release the `Verify Release` workflow automatically installs the new version on Ubuntu, macOS, and Windows and runs `colbert-server --version`/`doctor` to ensure the artifact works cross-platform.
+- The tag automatically kicks off the `Publish` workflow, which uploads the artifacts to PyPI via trusted publishing. After that completes the `Verify Release` workflow installs the new version on Ubuntu, macOS, and Windows and runs `colbert-server --version`/`doctor` to ensure the artifact works cross-platform.
 
 Happy searching! 🧠📚
