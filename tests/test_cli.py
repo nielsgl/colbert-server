@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 import argparse
+from io import StringIO
 from pathlib import Path
+import sys
 from unittest import mock
+
+import pytest
 
 import colbert_server.__init__ as cli
 
@@ -12,6 +16,76 @@ def test_doctor_success(monkeypatch: mock.MagicMock) -> None:
     monkeypatch.setenv("XDG_CACHE_HOME", str(Path.cwd() / "tmp-cache"))
     with mock.patch("importlib.import_module", return_value=mock.Mock(__version__="1.0")):
         assert cli.handle_doctor(argparse.Namespace()) == 0
+
+
+def test_version_warns_when_remote_newer(monkeypatch: mock.MagicMock, tmp_path: Path) -> None:
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
+    monkeypatch.delenv("COLBERT_SERVER_DISABLE_UPDATE_CHECK", raising=False)
+
+    with (
+        mock.patch.object(cli, "VERSION", "0.1.0"),
+        mock.patch("colbert_server.__init__._fetch_latest_version", return_value="0.2.0"),
+        mock.patch("colbert_server.__init__._write_cache"),
+    ):
+        parser = cli.build_parser()
+        buf_err, buf_out = StringIO(), StringIO()
+        with mock.patch.object(sys, "stderr", buf_err), mock.patch.object(sys, "stdout", buf_out):
+            with pytest.raises(SystemExit):
+                parser.parse_args(["--version"])
+        assert "A newer version" in buf_err.getvalue()
+
+
+def test_version_uses_cache(monkeypatch: mock.MagicMock, tmp_path: Path) -> None:
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
+    monkeypatch.delenv("COLBERT_SERVER_DISABLE_UPDATE_CHECK", raising=False)
+    cache_file = cli._cache_path()
+    cache_file.parent.mkdir(parents=True, exist_ok=True)
+    cache_file.write_text('{"latest": "0.9.0", "checked_at": 2000000000}')
+
+    with (
+        mock.patch.object(cli, "VERSION", "0.8.0"),
+        mock.patch("colbert_server.__init__._fetch_latest_version", return_value=None),
+        mock.patch("colbert_server.__init__._write_cache"),
+    ):
+        parser = cli.build_parser()
+        buf_err, buf_out = StringIO(), StringIO()
+        with mock.patch.object(sys, "stderr", buf_err), mock.patch.object(sys, "stdout", buf_out):
+            with pytest.raises(SystemExit):
+                parser.parse_args(["--version"])
+        assert "0.9.0" in buf_err.getvalue()
+
+
+def test_version_skips_when_no_newer(monkeypatch: mock.MagicMock, tmp_path: Path) -> None:
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
+    monkeypatch.delenv("COLBERT_SERVER_DISABLE_UPDATE_CHECK", raising=False)
+    with (
+        mock.patch.object(cli, "VERSION", "0.3.0"),
+        mock.patch("colbert_server.__init__._fetch_latest_version", return_value="0.3.0"),
+        mock.patch("colbert_server.__init__._write_cache"),
+    ):
+        parser = cli.build_parser()
+        buf_err, buf_out = StringIO(), StringIO()
+        with mock.patch.object(sys, "stderr", buf_err), mock.patch.object(sys, "stdout", buf_out):
+            with pytest.raises(SystemExit):
+                parser.parse_args(["--version"])
+        assert "A newer version" not in buf_err.getvalue()
+
+
+def test_version_disabled_by_env(monkeypatch: mock.MagicMock, tmp_path: Path) -> None:
+    monkeypatch.setenv("COLBERT_SERVER_DISABLE_UPDATE_CHECK", "1")
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
+    with (
+        mock.patch.object(cli, "VERSION", "0.5.0"),
+        mock.patch("colbert_server.__init__._fetch_latest_version") as fetch_mock,
+    ):
+        parser = cli.build_parser()
+        with (
+            mock.patch.object(sys, "stderr", StringIO()),
+            mock.patch.object(sys, "stdout", StringIO()),
+        ):
+            with pytest.raises(SystemExit):
+                parser.parse_args(["--version"])
+        fetch_mock.assert_not_called()
 
 
 def test_serve_from_cache_mock(monkeypatch: mock.MagicMock, tmp_path: Path) -> None:
