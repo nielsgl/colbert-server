@@ -8,7 +8,11 @@ on:
 
 jobs:
   lint-and-test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout repository
@@ -19,18 +23,29 @@ jobs:
         with:
           version: "latest"
           enable-cache: true
+          python-version: "3.13"
 
       - name: Install dependencies
         run: uv sync --locked --dev
+        env:
+          COLBERT_SERVER_DISABLE_UPDATE_CHECK: "1"
 
       - name: Ruff lint
         run: uv run ruff check
+        env:
+          COLBERT_SERVER_DISABLE_UPDATE_CHECK: "1"
 
       - name: Ruff format check
         run: uv run ruff format --check
+        env:
+          COLBERT_SERVER_DISABLE_UPDATE_CHECK: "1"
 
       - name: Compile sources
         run: uv run python -m compileall colbert_server
+        env:
+          COLBERT_SERVER_DISABLE_UPDATE_CHECK: "1"
 
       - name: CLI smoke test
         run: uv run colbert-server --help
+        env:
+          COLBERT_SERVER_DISABLE_UPDATE_CHECK: "1"

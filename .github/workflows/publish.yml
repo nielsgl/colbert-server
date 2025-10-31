@@ -80,6 +80,8 @@ jobs:
           packages-dir: dist
           verify-metadata: true
           verbose: true
+        env:
+          COLBERT_SERVER_DISABLE_UPDATE_CHECK: "1"
 
       - name: Publish to PyPI
         if: needs.determine-target.outputs.repository == 'pypi'
@@ -88,3 +90,5 @@ jobs:
           packages-dir: dist
           verify-metadata: true
           verbose: true
+        env:
+          COLBERT_SERVER_DISABLE_UPDATE_CHECK: "1"
