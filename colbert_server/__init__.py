@@ -26,6 +26,20 @@ from .server import DEFAULT_CACHE_SIZE, DEFAULT_CHECKPOINT, create_app, create_s
 PACKAGE_NAME = "colbert-server"
 
 
+class PrintVersionAction(argparse.Action):
+    """Custom --version action that performs the update check."""
+
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values,
+        option_string=None,
+    ) -> None:
+        maybe_warn_on_update()
+        parser.exit(message=f"{parser.prog} {VERSION}\n")
+
+
 def _resolve_version() -> str:
     try:
         return metadata.version(PACKAGE_NAME)
@@ -118,8 +132,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--version",
-        action="version",
-        version=f"%(prog)s {VERSION}",
+        action=PrintVersionAction,
+        nargs=0,
         help="Show the installed version and exit.",
     )
     subparsers = parser.add_subparsers(dest="command")
