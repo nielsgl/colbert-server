@@ -44,8 +44,11 @@ jobs:
 
       - name: Bump version
         run: |
-          uv version --bump ${{ github.event.inputs.bump }}
-          uv lock
+          uv version --bump ${{ github.event.inputs.bump }} --no-sync
+          uv lock --no-sync
+
+      - name: Sync dependencies
+        run: uv sync --locked --dev
 
       - name: Capture version
         run: |
@@ -53,8 +56,7 @@ jobs:
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
       - name: Run tests
-        run: |
-          uv run --python 3.13 pytest
+        run: uv run --locked pytest
 
       - name: Validate build
         run: uv build --no-sources
