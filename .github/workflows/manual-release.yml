@@ -44,7 +44,7 @@ jobs:
 
       - name: Bump version
         run: |
-          uv version --bump ${{ github.event.inputs.bump }} --no-sync
+          uv version --bump ${{ github.event.inputs.bump }}
           uv lock --no-sync
 
       - name: Sync dependencies
