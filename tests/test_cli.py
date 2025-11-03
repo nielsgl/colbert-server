@@ -101,11 +101,11 @@ def test_serve_from_cache_mock(monkeypatch: mock.MagicMock, tmp_path: Path) -> N
 
     with (
         mock.patch(
-            "colbert_server.data.download_collection_and_indexes",
+            "colbert_server.__init__.download_collection_and_indexes",
             return_value=snapshot_dir,
         ),
         mock.patch(
-            "colbert_server.data.detect_dataset_paths",
+            "colbert_server.__init__.detect_dataset_paths",
             return_value=(indexes_dir.parent, "mock-index", collection_dir / "collection.tsv"),
         ),
         mock.patch("colbert_server.__init__.create_searcher"),
